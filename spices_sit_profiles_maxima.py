@@ -48,9 +48,6 @@ def main(l2p_repo):
     # Create a collection of l2p sea ice thickness data
     l2p_collect = L2PSITCollection(l2p_file_list)
 
-    l2p = l2p_collect.profiles[0]
-    l2p.get_maxima()
-
     # Plot the collection
     create_nh_sit_map(l2p_collect)
 
@@ -73,8 +70,8 @@ def create_nh_sit_map(l2p_collect):
     m.drawcoastlines(linewidth=0.25, color="0.0")
     m.fillcontinents(color="#bcbdbf", lake_color="#bcbdbf", zorder=100)
     l2p = l2p_collect.profiles[0]
-    m.scatter(l2p.lon, l2p.lat, c=l2p.sit, vmin=0, vmax=5, s=1, edgecolors="none",
-              cmap=plt.get_cmap("plasma"), latlon=True)
+    indices = l2p.get_thickest_ice_indices()
+    m.scatter(l2p.lon[indices], l2p.lat[indices], c="red", marker="P", latlon=True)
     plt.show()
 
 class L2PSITCollection(object):
@@ -92,8 +89,6 @@ class L2PSITCollection(object):
             lon = nc.variables["longitude"][:]
             lat = nc.variables["latitude"][:]
             time = nc.variables["time"][:]
-            # units = datenum.units
-            # time = num2date(datenum[:], units=units)
             sit = nc.variables["sea_ice_thickness"][:]
             nc.close()
             self.profiles.append(L2PContainer(time, lon, lat, sit))
@@ -107,7 +102,7 @@ class L2PContainer(object):
         self.lat = lat
         self.sit = sit
 
-    def get_maxima(self, sit_threshold=5.0):
+    def get_thickest_ice_indices(self, sit_threshold=5.0):
 
         # 1. Split in orbits
         time_diff = np.ediff1d(self.time)
@@ -120,17 +115,25 @@ class L2PContainer(object):
         orbit_end_index = np.full(shape, len(self.time)-1)
         orbit_end_index[:-1] = new_orbit_indices
 
-        plt.figure(dpi=150)
+        thickest_ice_indices = []
+
+        # plt.figure(dpi=150)
         for i0, i1 in zip(orbit_start_index, orbit_end_index):
             x, y = self.time[i0:i1+1], self.sit[i0:i1+1]
             valid = np.where(np.isfinite(y))[0]
             spl = UnivariateSpline(x[valid], y[valid])
-            spl.set_smoothing_factor(0.5)
-            plt.scatter(x, y)
-            plt.plot(x, spl(x), color='black', lw=3, zorder=100)
+            spl.set_smoothing_factor(0.9*len(valid))
 
-        plt.show()
-        stop
+            y_fit = spl(x[valid])
+            indices = np.where(y_fit > sit_threshold)[0]
+            thickest_ice_indices.extend(valid[indices])
+
+        return thickest_ice_indices
+            # plt.scatter(x, y)
+            # plt.plot(x[valid], spl(x[valid]), color='black', lw=3, zorder=100)
+
+        # plt.show()
+        # stop
 
 if __name__ == '__main__':
 
