@@ -1,5 +1,7 @@
-from eu-spices-thickest-seaice import get_l2p_file_list, L2PSITCollection
+from __future__ import print_function
+from spices_thickice import get_l2p_file_list, create_nh_sit_map, L2PSITCollection
 
+import os
 import sys
 
 def main(l2p_repo):
