@@ -61,7 +61,7 @@ class MapBaseClass(object):
             self.basemap_dict = self.default_basemap_dict
 
     def _init_map(self):
-        self.fig = plt.figure(figsize=(8, 8))
+        self.fig = plt.figure(figsize=(8, 8), dpi=300)
         self.ax = plt.gca()
         self.ax.set_position([0.05, 0.05, 0.9, 0.9])
         self.m = Basemap(ax=self.ax, **self.basemap_dict)
@@ -213,12 +213,26 @@ class L2PContainer(object):
             # NOTE: This has been chosen to provide a smooth representation
             #       of the irregular and gappy data coverage
             x, y = self.time[i0:i1+1], self.sit[i0:i1+1]
-            valid = np.where(np.isfinite(y))[0]
-            spl = UnivariateSpline(x[valid], y[valid])
+
+            # Valid points: no NaN's and no negative time changes
+            # TODO: The negative date change must be a bug in the l2p processing chain
+            is_finite = np.isfinite(y)
+            neg_inc_indices = np.where(np.ediff1d(x) < 0)[0]
+            is_positive_inc = np.full(is_finite.shape, True)
+            if len(neg_inc_indices) > 0:
+                j = neg_inc_indices[0]
+                is_positive_inc[j:] = False
+            valid = np.where(np.logical_and(is_finite, is_positive_inc))[0]
+
+            # Spline interpolation might fail for low number of points, etc. 
+            try: 
+                spl = UnivariateSpline(x[valid], y[valid])
+                y_fit = spl(x[valid])
+            except:
+                continue
 
             # Get the indices where both profile value as well as smoothed thickness
-            # profile exceeds a thickness threshold
-            y_fit = spl(x[valid])
+            # profile exceeds a thickness threshold           
             local_indices = np.where(
                 np.logical_and(y_fit > sit_threshold*smoothed_profile_scaling, 
                                y[valid] > sit_threshold))[0]

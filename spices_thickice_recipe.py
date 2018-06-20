@@ -15,8 +15,8 @@ def main(l2p_repo):
     l2p_collect = L2PSITCollection(l2p_file_list)
 
     # Plot the thickness values
-    # fig = L2pSITMap(l2p_collect)
-    # fig.show(block=False)
+    fig = L2pSITMap(l2p_collect)
+    fig.show(block=False)
 
     # Plot the thickest ice location with default settings
     fig = ThickestIceMap(l2p_collect)
