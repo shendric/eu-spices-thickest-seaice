@@ -61,7 +61,7 @@ class MapBaseClass(object):
             self.basemap_dict = self.default_basemap_dict
 
     def _init_map(self):
-        self.fig = plt.figure(figsize=(8, 8), dpi=300)
+        self.fig = plt.figure(figsize=(8, 8), dpi=150)
         self.ax = plt.gca()
         self.ax.set_position([0.05, 0.05, 0.9, 0.9])
         self.m = Basemap(ax=self.ax, **self.basemap_dict)
