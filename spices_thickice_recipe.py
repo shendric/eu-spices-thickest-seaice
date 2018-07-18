@@ -1,9 +1,10 @@
 from __future__ import print_function
-from spices_thickice import get_l2p_file_list, L2PSITCollection, L2pSITMap, ThickestIceMap
-
 import os
 import sys
 
+from spices_thickice import get_l2p_file_list, L2PSITCollection, L2pSITMap, ThickestIceMap
+ 
+ 
 def main(l2p_repo):
     """ Add doc here """
     
